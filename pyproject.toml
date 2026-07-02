@@ -36,13 +36,13 @@ pythonpath = ["tools/pre_commit", "tools/test_utils"]
 [tool.ruff]
 line-length = 80
 target-version = "py312"
-extend-exclude = ["notebooks", "report"]
+extend-exclude = ["report"]
 
 [tool.ruff.lint]
 select = ["E", "F", "UP", "B", "SIM", "C4", "PT"]
 
 [tool.typos.files]
-extend-exclude = ["notebooks", "report"]
+extend-exclude = ["report"]
 
 [tool.mypy]
 python_version = "3.12"
