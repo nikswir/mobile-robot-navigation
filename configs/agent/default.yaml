@@ -1,0 +1,8 @@
+# An `agent` option — must satisfy AgentConfig in config_schema.py.
+actor_lr: 1.0e-4
+critic_lr: 5.0e-4
+state_size: 10
+action_size: 2
+critic_input_size: 12
+hidden1: 128
+hidden2: 256

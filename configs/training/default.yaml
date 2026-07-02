@@ -1,0 +1,9 @@
+# A `training` option — must satisfy TrainingConfig in config_schema.py.
+num_episodes: 3000
+num_noise_episodes: 2400
+max_steps: 500
+gamma: 0.99
+tau: 0.005
+buffer_size: 100000
+batch_size: 256
+end_factor: 0.05

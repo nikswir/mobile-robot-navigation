@@ -1,0 +1,4 @@
+# A `noise` option — must satisfy NoiseConfig in config_schema.py.
+mu: 0.0
+theta: 0.15
+sigma: 0.2

@@ -1,0 +1,11 @@
+# An `environment` option — must satisfy EnvironmentConfig in config_schema.py.
+target_threshold: 10
+obstacle_threshold: 1
+poi_threshold: 5
+min_obstacles: 2
+max_obstacles: 5
+min_obstacle_size: 60
+max_obstacle_size: 220
+min_start_distance: 300
+observation_height: 600
+observation_width: 800
