@@ -46,6 +46,10 @@ ASSETS = Path(__file__).parents[1] / "assets"
 INK = "#27324a"
 MUTED = "#6b7896"
 
+########################################
+#              Recording               #
+########################################
+
 
 def record_episode(actor, device, env):
     """Roll out one deterministic episode and record poses + scans."""
@@ -79,6 +83,11 @@ def record_episode(actor, device, env):
         "max_linear": env.max_linear,
     }
     return frames, outcome, meta
+
+
+########################################
+#              Rendering               #
+########################################
 
 
 def render_frame(fig, ax, meta, trail, pose, episode, total, step):
@@ -164,6 +173,11 @@ def render_frame(fig, ax, meta, trail, pose, episode, total, step):
     fig.savefig(buf, format="png", dpi=DPI, facecolor=viz.FIELD_FACE)
     buf.seek(0)
     return Image.open(buf).convert("P", palette=Image.Palette.ADAPTIVE)
+
+
+########################################
+#             Entry point              #
+########################################
 
 
 def main() -> None:

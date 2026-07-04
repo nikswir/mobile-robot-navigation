@@ -54,9 +54,11 @@ def save(fig, name):
     print(f"wrote {name}")
 
 
-# --------------------------------------------------------------------------
-# 1. Environment schematic
-# --------------------------------------------------------------------------
+########################################
+#       1. Environment schematic       #
+########################################
+
+
 def fig_environment():
     env = MobileRobotEnv(seed=13)
     env.reset()
@@ -98,9 +100,11 @@ def fig_environment():
     save(fig, "environment")
 
 
-# --------------------------------------------------------------------------
-# 1b. Random layouts montage
-# --------------------------------------------------------------------------
+########################################
+#      1b. Random layouts montage      #
+########################################
+
+
 def fig_layouts():
     fig, axes = plt.subplots(1, 3, figsize=(11.4, 3.2))
     for ax, seed in zip(axes, (21, 22, 23), strict=False):
@@ -118,9 +122,11 @@ def fig_layouts():
     save(fig, "layouts")
 
 
-# --------------------------------------------------------------------------
-# 2. Actor-Critic architecture
-# --------------------------------------------------------------------------
+########################################
+#     2. Actor-Critic architecture     #
+########################################
+
+
 def _layer(ax, x, y, w, h, text, face):
     ax.add_patch(
         FancyBboxPatch(
@@ -201,9 +207,11 @@ def fig_architecture():
     save(fig, "architecture")
 
 
-# --------------------------------------------------------------------------
-# 3. POI heuristic field
-# --------------------------------------------------------------------------
+########################################
+#        3. POI heuristic field        #
+########################################
+
+
 def fig_poi_heatmap():
     env = MobileRobotEnv(seed=13)
     env.reset()
@@ -278,9 +286,11 @@ def fig_poi_heatmap():
     save(fig, "poi_heatmap")
 
 
-# --------------------------------------------------------------------------
-# 4. Learning curve + arrival rate
-# --------------------------------------------------------------------------
+########################################
+#   4. Learning curve + arrival rate   #
+########################################
+
+
 def _moving_avg(a, k=25):
     if len(a) < k:
         return a
@@ -322,9 +332,11 @@ def fig_learning_curve():
     save(fig, "learning_curve")
 
 
-# --------------------------------------------------------------------------
-# 5. Trajectory
-# --------------------------------------------------------------------------
+########################################
+#            5. Trajectory             #
+########################################
+
+
 def _draw_rollout(ax, t, color, label, dashed=False):
     """One rollout in its own layout, both taken from the trajectory JSON."""
     viz.draw_field(ax, t["width"], t["height"])

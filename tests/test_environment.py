@@ -9,6 +9,9 @@ corridor from the start to the target exists.
 
 from __future__ import annotations
 
+import math
+import pytest
+
 import numpy as np
 
 from mobile_robot_navigation.environment import (
@@ -186,3 +189,85 @@ def test_poi_fallback_targets_the_goal() -> None:
 
     fallback = poi or POI(env.target_x, env.target_y)
     assert (fallback.x, fallback.y) == (env.target_x, env.target_y)
+
+
+########################################
+#           Reward & sensing           #
+########################################
+
+
+def test_reward_is_shaping_off_a_terminal() -> None:
+    """Off a terminal, reward = throttle - |steer| + 0.1*progress - 1."""
+    env = MobileRobotEnv(seed=8)
+    env.reset()
+
+    # ── Clear the layout so the step is neither a collision nor OOB ──
+    env.obstacles = []
+    env.obstacles_cord = env._border_rects()
+    env.robot.set_position(400.0, 300.0, 0.0)
+    prev = math.hypot(400.0 - env.target_x, 300.0 - env.target_y)
+    env.prev_target_dist = prev
+
+    action = np.array([0.4, -0.2])
+    _obs, reward, done, arrived = env.step(action)
+
+    # ── Recompute the expected reward from the same kinematics ──
+    alpha = action[1] % (2 * np.pi)
+    speed = 10 * ((action[0] + 1) / 2)
+    new_x = 400.0 + speed * np.cos(alpha)
+    new_y = 300.0 + speed * np.sin(alpha)
+    new_dist = math.hypot(new_x - env.target_x, new_y - env.target_y)
+    expected = action[0] - abs(action[1]) + 0.1 * (prev - new_dist) - 1
+
+    assert done == 0
+    assert arrived == 0
+    assert reward == pytest.approx(expected)
+
+
+def test_scan_measures_distance_to_obstacle_ahead() -> None:
+    """The forward beam returns the normalized range to an obstacle ahead."""
+    env = MobileRobotEnv(seed=9)
+    env.reset()
+
+    # ── One obstacle straight ahead of a centred, east-facing rover ──
+    env.robot.set_position(100.0, 100.0, 0.0)
+    obstacle = (400.0, 300.0, 200.0, 50.0)  # (x_max, x_min, y_max, y_min)
+    env.obstacles_cord = env._border_rects() + [obstacle]
+
+    scans = env.scan()
+
+    # ── Beam 3 (detector angle 0) casts from the body centre and hits the
+    #    obstacle's near face at x_min = 300; beam 6 (+90°) clears it and
+    #    reads the far bottom wall instead ──
+    x_0 = 100.0 + env.robot.icon_w // 2
+    assert scans[3] == pytest.approx((300.0 - x_0) / env.max_linear)
+    assert scans[6] == pytest.approx((HEIGHT - x_0) / env.max_linear)
+
+
+def test_out_of_boundary_true_past_each_wall() -> None:
+    """The centre is inside; a pose hard against any wall is out of bounds."""
+    env = MobileRobotEnv(seed=10)
+    env.reset()
+
+    env.robot.set_position(400.0, 300.0, 0.0)
+    assert not env.out_of_boundary(env.robot)
+
+    for x, y in ((0.0, 300.0), (WIDTH, 300.0), (400.0, 0.0), (400.0, HEIGHT)):
+        env.robot.set_position(float(x), float(y), 0.0)
+        assert env.out_of_boundary(env.robot)
+
+
+def test_step_out_of_bounds_terminates_with_penalty() -> None:
+    """Driving off the field ends the episode with the -50 penalty."""
+    env = MobileRobotEnv(seed=11)
+    env.reset()
+    env.obstacles = []
+    env.obstacles_cord = env._border_rects()
+
+    # ── Just inside the left wall, heading west, full throttle ──
+    env.robot.set_position(2.0, 300.0, np.pi)
+    _obs, reward, done, arrived = env.step(np.array([1.0, 0.0]))
+
+    assert done == 1
+    assert arrived == 0
+    assert reward == -50

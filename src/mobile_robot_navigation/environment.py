@@ -53,10 +53,6 @@ class Point:
     def get_position(self) -> tuple[float, float]:
         return (self.x, self.y)
 
-    def move(self, del_x: float, del_y: float) -> None:
-        self.x += del_x
-        self.y += del_y
-
 
 ########################################
 #                Robot                 #
@@ -131,10 +127,15 @@ class Robot(Point):
         ):
             try_dist = 0.1
             angle = detector_angle + self.alpha
+
+            # ── Cast from the body centre, the same origin scan() measures
+            #    from, so a POI never overshoots the free span into a wall ──
+            origin_x = self.x + self.icon_w // 2
+            origin_y = self.y + self.icon_h // 2
             while try_dist + 0.05 < distance:
                 reach = self.max_linear * try_dist
-                x_poi = int(self.x + reach * math.cos(angle))
-                y_poi = int(self.y + reach * math.sin(angle))
+                x_poi = int(origin_x + reach * math.cos(angle))
+                y_poi = int(origin_y + reach * math.sin(angle))
 
                 top = max(0, y_poi - self.POI_area_height // 2 + 1)
                 bottom = min(height, y_poi + self.POI_area_height // 2 - 1)

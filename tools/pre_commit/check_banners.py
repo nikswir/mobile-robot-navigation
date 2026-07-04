@@ -2,7 +2,9 @@
 
 Tier-1 — boxed `#` banners (border / `# centered label #` / border): every
 banner in a file shares one width, the middle lines up, the label is centred,
-and the banner is indented to the code it heads.
+and the banner is indented to the code it heads. A module that defines a
+function or class must carry at least one such banner; empty and pure
+re-export modules (no def/class) are exempt.
 
 Tier-2 — `# ──` block intros: a blank line above (separating it from the
 previous block) and code directly below (the block hugs its intro). A suite
@@ -14,6 +16,7 @@ intro opens the first block of that suite.
 
 from __future__ import annotations
 
+import ast
 import argparse
 
 from pathlib import Path
@@ -71,6 +74,18 @@ def headed_indent(lines: list[str], start: int) -> int | None:
     return None
 
 
+def defines_symbol(source: str) -> bool:
+    # ── True when the module has a top-level function or class — a file with
+    #    real structure, which §1 asks to head with a section banner. Empty
+    #    and pure re-export modules (no def/class) are exempt. ──
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return False  # leave syntax errors to ruff / python
+    kinds = (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
+    return any(isinstance(node, kinds) for node in tree.body)
+
+
 ########################################
 #            Tier-1 banners            #
 ########################################
@@ -93,11 +108,19 @@ def check_banners(path: Path, lines: list[str]) -> bool:
         number = i + 2
         width = len(lines[i].strip())
         mid = lines[i + 1].strip()
+        bottom = len(lines[i + 2].strip())
 
         if len(mid) != width:
             print(
                 f"{path}:{number}: banner middle width "
                 f"{len(mid)} != border {width} (code-style §1)",
+            )
+            bad = True
+
+        if bottom != width:
+            print(
+                f"{path}:{number + 1}: banner bottom border width "
+                f"{bottom} != top border {width} (code-style §1)",
             )
             bad = True
         else:
@@ -121,6 +144,20 @@ def check_banners(path: Path, lines: list[str]) -> bool:
             bad = True
 
     return bad
+
+
+def check_has_banner(path: Path, lines: list[str]) -> bool:
+    # ── A structured module (defines a function/class) must carry at least
+    #    one Tier-1 banner; trivial modules are exempt (see defines_symbol). ──
+    if not defines_symbol("\n".join(lines)):
+        return False
+    if banner_tops(lines):
+        return False
+    print(
+        f"{path}:1: file defines a function/class but has no Tier-1 "
+        f"banner — add at least one section banner (code-style §1)",
+    )
+    return True
 
 
 ########################################
@@ -176,6 +213,7 @@ def main(argv: list[str] | None = None) -> int:
         lines = path.read_text().splitlines()
         bad = check_banners(path, lines) or bad
         bad = check_intros(path, lines) or bad
+        bad = check_has_banner(path, lines) or bad
     return 1 if bad else 0
 
 

@@ -8,6 +8,10 @@ from pathlib import Path
 
 FIRST_PARTY = {"mobile_robot_navigation"}
 
+########################################
+#             Import check             #
+########################################
+
 
 def _check(tmp_path: Path, text: str) -> bool:
     path = tmp_path / "sample.py"

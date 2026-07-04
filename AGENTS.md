@@ -11,7 +11,7 @@ Repo-specific commands (how to run the app) live in the README.
 | ------------------------ | ------------------------------------------ |
 | dependencies & packaging | uv (src layout)                            |
 | lint + format            | Ruff (`ruff check`, `ruff format`)         |
-| type checking            | mypy (strict, over `src` and `tools`)      |
+| type checking            | mypy (strict over `src`/`tools`, relaxed over `report/scripts`) |
 | tests                    | pytest (+ Hypothesis for property tests)   |
 | config                   | Hydra structured configs                   |
 | commit gate              | pre-commit                                 |
@@ -78,8 +78,9 @@ files — that is when the gate is real.
 
 - **ruff** — `ruff check` (rules `E, F, UP, B, SIM, C4, PT`; isort `I` is off,
   imports are ordered by length — code-style §6) and `ruff format --check`.
-- **mypy** — strict (`disallow_untyped_defs`, …) over `src` and `tools`. Every
-  function is fully annotated; the package ships a `py.typed` marker.
+- **mypy** — strict (`disallow_untyped_defs`, …) over `src` and `tools`, and
+  also over `report/scripts` with untyped defs allowed (research glue). Every
+  library function is fully annotated; the package ships a `py.typed` marker.
 
 ## Tests — two stages
 

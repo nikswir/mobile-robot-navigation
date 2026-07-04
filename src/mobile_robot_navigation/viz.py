@@ -330,14 +330,19 @@ def render_env(
         for o in env.obstacles_cord[4:]
     ]
 
+    # ── Anchor the rover/lidar at the body centre — the same origin
+    #    scan() casts from — so the beams match the obstacles they hit ──
+    cx = env.robot.x + env.robot.icon_w // 2
+    cy = env.robot.y + env.robot.icon_h // 2
+
     draw_field(ax, width, height)
     draw_obstacles(ax, obstacles)
     draw_target(ax, (env.target_x, env.target_y), env.target_threshold)
     if show_lidar:
         draw_lidar(
             ax,
-            env.robot.x,
-            env.robot.y,
+            cx,
+            cy,
             env.robot.alpha,
             env.robot.scan_range,
             env.scan(),
@@ -345,8 +350,8 @@ def render_env(
         )
     draw_rover(
         ax,
-        env.robot.x,
-        env.robot.y,
+        cx,
+        cy,
         env.robot.alpha,
     )
     return ax

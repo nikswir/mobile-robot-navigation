@@ -88,14 +88,37 @@ def parse_imports(source: str) -> list[Imp]:
     return imports
 
 
-def blocks_of(imports: list[Imp]) -> list[list[Imp]]:
-    # ── Group imports separated by a blank line into the same block ──
+def relative_import_lines(source: str) -> list[int]:
+    # ── Every relative import ANYWHERE (also inside try / if TYPE_CHECKING /
+    #    a function), so a conditionally-imported module can't dodge the
+    #    absolute-only rule by hiding below module top level. ──
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return []
+    return sorted(
+        node.lineno
+        for node in ast.walk(tree)
+        if isinstance(node, ast.ImportFrom) and node.level > 0
+    )
+
+
+def blocks_of(imports: list[Imp], source: str) -> list[list[Imp]]:
+    # ── A block is a run of imports with NO blank line between them: a bare
+    #    comment keeps two imports together, a blank line starts a new block,
+    #    and `from __future__` always stands alone (never ladders with what
+    #    follows). Split on real blank lines, not on any physical line gap. ──
+    lines = source.splitlines()
     blocks: list[list[Imp]] = []
     current: list[Imp] = []
     for imp in imports:
-        if current and imp.line > current[-1].end + 1:
-            blocks.append(current)
-            current = []
+        if current:
+            gap = lines[current[-1].end : imp.line - 1]
+            blank_between = any(not text.strip() for text in gap)
+            future_before = current[-1].root == "__future__"
+            if blank_between or future_before:
+                blocks.append(current)
+                current = []
         current.append(imp)
     if current:
         blocks.append(current)
@@ -118,20 +141,21 @@ def category(imp: Imp, first_party: set[str]) -> int:
 
 
 def check_file(path: Path, first_party: set[str]) -> bool:
+    source = path.read_text()
     try:
-        imports = parse_imports(path.read_text())
+        imports = parse_imports(source)
     except SyntaxError:
         return False  # leave syntax errors to ruff / python
     bad = False
 
-    # ── Absolute imports only: a leading dot is a relative import ──
-    for imp in imports:
-        if imp.level > 0:
-            print(
-                f"{path}:{imp.line}: relative import "
-                f"(use an absolute import) (code-style §6)",
-            )
-            bad = True
+    # ── Absolute imports only: a leading dot is a relative import, flagged
+    #    wherever it lives (top level or nested in try / if / a function) ──
+    for line in relative_import_lines(source):
+        print(
+            f"{path}:{line}: relative import "
+            f"(use an absolute import) (code-style §6)",
+        )
+        bad = True
 
     # ── Blocks in category order: future, 3p import/from, 1p import/from ──
     prev_cat = -1
@@ -146,7 +170,7 @@ def check_file(path: Path, first_party: set[str]) -> bool:
         prev_cat = cat
 
     # ── Within each block, single-line imports rise in length ──
-    for block in blocks_of(imports):
+    for block in blocks_of(imports, source):
         for a, b in zip(block, block[1:], strict=False):
             if len(b.logical) < len(a.logical):
                 print(
@@ -156,7 +180,7 @@ def check_file(path: Path, first_party: set[str]) -> bool:
                 bad = True
 
     # ── A parenthesised multi-line import is set off as its own block ──
-    for block in blocks_of(imports):
+    for block in blocks_of(imports, source):
         if len(block) > 1:
             for imp in block:
                 if imp.end > imp.line:

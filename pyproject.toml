@@ -69,6 +69,10 @@ disallow_incomplete_defs = false
 
 [tool.mutmut]
 source_paths = ["src/mobile_robot_navigation/"]
+# mutmut runs the suite from a copied `mutants/` tree; carry the `tools/`
+# packages (they sit on pytest's `pythonpath`) and `pyproject.toml` along so
+# the tool tests still import and the copied tree is self-contained.
+also_copy = ["tools", "pyproject.toml"]
 
 [tool.coverage.run]
 branch = true

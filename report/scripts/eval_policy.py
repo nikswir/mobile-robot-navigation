@@ -28,6 +28,10 @@ MAX_STEPS = 500
 
 ASSETS = Path(__file__).parents[1] / "assets"
 
+########################################
+#               Rollout                #
+########################################
+
 
 def rollout(actor, device, env):
     state = env.reset()
@@ -45,7 +49,13 @@ def rollout(actor, device, env):
             outcome = "arrived"
             break
         if done:
-            outcome = "collision"
+            # env.step raises `done` for a collision OR for leaving the field;
+            # tell them apart so the figure's label is truthful.
+            outcome = (
+                "out_of_bounds"
+                if env.out_of_boundary(env.robot)
+                else "collision"
+            )
             break
     meta = {
         "target": [env.target_x, env.target_y],
@@ -58,6 +68,11 @@ def rollout(actor, device, env):
         "target_threshold": env.target_threshold,
     }
     return xs, ys, alphas, outcome, meta
+
+
+########################################
+#             Entry point              #
+########################################
 
 
 def main() -> None:
