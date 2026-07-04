@@ -95,11 +95,6 @@ formulation matters more than the algorithm — the ablations:
   </tr>
 </table>
 
-Trained on an Apple-Silicon **CPU** in ~20 minutes — the networks are small
-enough that per-step host–device syncs make the MPS backend slower (and long
-MPS runs hit a deterministic command-buffer hang). The full write-up is in
-[report/main.pdf](report/main.pdf).
-
 ## Quickstart
 
 ```bash
@@ -170,17 +165,6 @@ uv run python report/scripts/make_gif.py        # rebuild the README demo GIF
 ```
 
 Set `MRN_DEVICE=cpu` to force the device (recommended on Apple Silicon).
-
-## Testing
-
-The correctness evidence targets the guarantees, not just the code paths: the
-solvability claim is re-verified by an **independent BFS recheck** on freshly
-sampled layouts; layout invariants (count, size, bounds, clear spawn) are
-asserted over many resets; episode dynamics are pinned (arrival is terminal
-with its exact reward, collisions terminate with the penalty, exploration
-memory resets between episodes); Hypothesis property tests bound every
-observation; and a miniature end-to-end `train_policy` run exercises the full
-DDPG loop on CPU. Heavy tests stay behind a stage-2 gate (`RUN_STAGE2=1`).
 
 ## Layout
 
