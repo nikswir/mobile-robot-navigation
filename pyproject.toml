@@ -36,17 +36,21 @@ pythonpath = ["tools/pre_commit", "tools/test_utils"]
 [tool.ruff]
 line-length = 80
 target-version = "py312"
-extend-exclude = ["report"]
+extend-exclude = ["report/assets", "report/figures"]
 
 [tool.ruff.lint]
 select = ["E", "F", "UP", "B", "SIM", "C4", "PT"]
 
+[tool.ruff.lint.per-file-ignores]
+# The scripts pin the matplotlib backend before importing pyplot.
+"report/scripts/*" = ["E402"]
+
 [tool.typos.files]
-extend-exclude = ["report"]
+extend-exclude = ["report/assets", "report/figures"]
 
 [tool.mypy]
 python_version = "3.12"
-files = ["src", "tools"]
+files = ["src", "tools", "report/scripts"]
 warn_unused_configs = true
 warn_redundant_casts = true
 warn_unused_ignores = true
@@ -55,6 +59,13 @@ disallow_incomplete_defs = true
 check_untyped_defs = true
 no_implicit_optional = true
 warn_return_any = true
+
+# Report scripts are research glue: style rules apply, but full strict
+# typing would be disproportionate — untyped defs stay allowed there.
+[[tool.mypy.overrides]]
+module = ["run_experiment", "eval_policy", "make_figures", "make_gif"]
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
 
 [tool.mutmut]
 source_paths = ["src/mobile_robot_navigation/"]

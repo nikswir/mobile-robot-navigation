@@ -6,24 +6,25 @@ each recorded episode frame-by-frame with the same vector renderer (`viz`)
 that draws every report figure, and writes an animated GIF preview to
 docs/assets/demo.gif.
 
-    uv run python report/make_gif.py
+    uv run python report/scripts/make_gif.py
 """
 
 from __future__ import annotations
 
-import io
 import os
+
+# Pin the headless backend before pyplot is imported anywhere below.
+os.environ.setdefault("MPLBACKEND", "Agg")
+
+import io
+import torch
 import random
 import contextlib
-from pathlib import Path
-
-import torch
 import numpy as np
-import matplotlib
-
-matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+
 from PIL import Image
+from pathlib import Path
 from matplotlib.patches import Circle
 
 from mobile_robot_navigation import viz
@@ -39,8 +40,8 @@ HOLD_LAST = 8
 FRAME_MS = 90
 DPI = 110
 
-OUT = Path(__file__).parent.parent / "docs" / "assets" / "demo.gif"
-ASSETS = Path(__file__).parent / "assets"
+OUT = Path(__file__).parents[2] / "docs" / "assets" / "demo.gif"
+ASSETS = Path(__file__).parents[1] / "assets"
 
 INK = "#27324a"
 MUTED = "#6b7896"
@@ -101,15 +102,24 @@ def render_frame(fig, ax, meta, trail, pose, episode, total, step):
 
     # ── Path so far, with the start marker used in the report figures ──
     if len(trail) > 1:
-        xs, ys = zip(*trail)
+        xs, ys = zip(*trail, strict=False)
         ax.plot(
-            xs, ys, color=viz.TRAIL_COLOR, linewidth=2.2,
-            alpha=0.85, solid_capstyle="round", zorder=7,
+            xs,
+            ys,
+            color=viz.TRAIL_COLOR,
+            linewidth=2.2,
+            alpha=0.85,
+            solid_capstyle="round",
+            zorder=7,
         )
         ax.add_patch(
             Circle(
-                (xs[0], ys[0]), 7.0, facecolor="white",
-                edgecolor=viz.TRAIL_COLOR, linewidth=2.0, zorder=7,
+                (xs[0], ys[0]),
+                7.0,
+                facecolor="white",
+                edgecolor=viz.TRAIL_COLOR,
+                linewidth=2.0,
+                zorder=7,
             ),
         )
 
@@ -117,26 +127,43 @@ def render_frame(fig, ax, meta, trail, pose, episode, total, step):
     x, y, alpha, scans = pose
     cx, cy = x + 16, y + 16
     viz.draw_lidar(
-        ax, cx, cy, alpha,
-        meta["scan_range"], scans, meta["max_linear"],
+        ax,
+        cx,
+        cy,
+        alpha,
+        meta["scan_range"],
+        scans,
+        meta["max_linear"],
     )
     viz.draw_rover(ax, cx, cy, alpha)
 
     # ── HUD on the field itself ──
     ax.text(
-        16, 14, "DDPG policy on unseen random layouts",
-        color=INK, fontsize=11, fontweight="bold", va="top", zorder=9,
+        16,
+        14,
+        "DDPG policy on unseen random layouts",
+        color=INK,
+        fontsize=11,
+        fontweight="bold",
+        va="top",
+        zorder=9,
     )
     ax.text(
-        w - 16, 14, f"episode {episode:02d}/{total:02d} · step {step:03d}",
-        color=MUTED, fontsize=10, family="monospace",
-        ha="right", va="top", zorder=9,
+        w - 16,
+        14,
+        f"episode {episode:02d}/{total:02d} · step {step:03d}",
+        color=MUTED,
+        fontsize=10,
+        family="monospace",
+        ha="right",
+        va="top",
+        zorder=9,
     )
 
     buf = io.BytesIO()
     fig.savefig(buf, format="png", dpi=DPI, facecolor=viz.FIELD_FACE)
     buf.seek(0)
-    return Image.open(buf).convert("P", palette=Image.ADAPTIVE)
+    return Image.open(buf).convert("P", palette=Image.Palette.ADAPTIVE)
 
 
 def main() -> None:
@@ -177,8 +204,14 @@ def main() -> None:
         for k in picks:
             trail = [(f[0] + 16, f[1] + 16) for f in frames[: k + 1]]
             img = render_frame(
-                fig, ax, meta, trail, frames[k],
-                idx, len(episodes), k,
+                fig,
+                ax,
+                meta,
+                trail,
+                frames[k],
+                idx,
+                len(episodes),
+                k,
             )
             images.append(img)
         images.extend([images[-1]] * HOLD_LAST)

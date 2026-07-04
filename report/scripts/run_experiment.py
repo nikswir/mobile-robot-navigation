@@ -4,29 +4,29 @@ Runs a full training session (MPS when available), records the per-episode
 reward curve, saves the trained actor, and rolls out one greedy episode to
 capture a trajectory. Outputs land in report/assets/.
 
-    uv run python report/run_experiment.py
+    uv run python report/scripts/run_experiment.py
 """
 
 from __future__ import annotations
 
 import os
 import json
+import torch
 import random
 import contextlib
-from pathlib import Path
-
-import torch
 import numpy as np
 
-from mobile_robot_navigation.agent import Actor, train_policy
+from pathlib import Path
+
 from mobile_robot_navigation.environment import ChopperScape
+from mobile_robot_navigation.agent import Actor, train_policy
 
 SEED = 7
 EPISODES = 3000
 NOISE_EPISODES = 2400
 MAX_STEPS = 500
 
-ASSETS = Path(__file__).parent / "assets"
+ASSETS = Path(__file__).parents[1] / "assets"
 ASSETS.mkdir(parents=True, exist_ok=True)
 
 

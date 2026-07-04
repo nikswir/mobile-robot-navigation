@@ -5,19 +5,19 @@ freshly sampled layouts to estimate the arrival rate. Saves the fastest
 successful trajectory (and one failure, when observed) with their layout
 geometry for the report figures.
 
-    uv run python report/eval_policy.py
+    uv run python report/scripts/eval_policy.py
 """
 
 from __future__ import annotations
 
 import os
 import json
+import torch
 import random
 import contextlib
-from pathlib import Path
-
-import torch
 import numpy as np
+
+from pathlib import Path
 
 from mobile_robot_navigation.agent import Actor
 from mobile_robot_navigation.environment import ChopperScape
@@ -26,7 +26,7 @@ SEED = 11
 N_ROLLOUTS = 300
 MAX_STEPS = 500
 
-ASSETS = Path(__file__).parent / "assets"
+ASSETS = Path(__file__).parents[1] / "assets"
 
 
 def rollout(actor, device, env):
@@ -98,8 +98,11 @@ def main() -> None:
     if best is not None:
         xs, ys, alphas, meta = best
         traj = {
-            "xs": xs, "ys": ys, "alphas": alphas,
-            "outcome": "arrived", **meta,
+            "xs": xs,
+            "ys": ys,
+            "alphas": alphas,
+            "outcome": "arrived",
+            **meta,
         }
         (ASSETS / "trajectory_success.json").write_text(json.dumps(traj))
         print(f"saved successful trajectory ({len(xs)} steps)")
@@ -109,8 +112,11 @@ def main() -> None:
     if worst is not None:
         xs, ys, alphas, meta = worst
         traj = {
-            "xs": xs, "ys": ys, "alphas": alphas,
-            "outcome": "collision", **meta,
+            "xs": xs,
+            "ys": ys,
+            "alphas": alphas,
+            "outcome": "collision",
+            **meta,
         }
         (ASSETS / "trajectory.json").write_text(json.dumps(traj))
         print(f"saved failure trajectory ({len(xs)} steps)")

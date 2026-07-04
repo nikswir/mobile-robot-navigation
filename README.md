@@ -33,10 +33,10 @@ uv run python -m mobile_robot_navigation.run --cfg job  # print the composed con
 ## Reproduce the experiment
 
 ```bash
-uv run python report/run_experiment.py   # train + save actor & reward curve
-uv run python report/eval_policy.py      # arrival rate over 300 random layouts
-uv run python report/make_figures.py     # regenerate the report figures
-uv run python report/make_gif.py         # rebuild the README demo GIF
+uv run python report/scripts/run_experiment.py  # train + save actor & rewards
+uv run python report/scripts/eval_policy.py     # arrival rate, 300 layouts
+uv run python report/scripts/make_figures.py    # regenerate report figures
+uv run python report/scripts/make_gif.py        # rebuild the README demo GIF
 ```
 
 ## Develop

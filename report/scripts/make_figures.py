@@ -3,39 +3,43 @@
 Reads training artifacts from report/assets/ and the live environment geometry,
 then writes vector PDFs (and PNG previews) to report/figures/.
 
-    uv run python report/make_figures.py
+    uv run python report/scripts/make_figures.py
 """
 
 from __future__ import annotations
 
+import os
+
+# Pin the headless backend before pyplot is imported anywhere below.
+os.environ.setdefault("MPLBACKEND", "Agg")
+
 import json
 import math
 import contextlib
-from pathlib import Path
-
 import numpy as np
-import matplotlib
-
-matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
 
-from mobile_robot_navigation.environment import POI, ChopperScape
+from pathlib import Path
+from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
+
 from mobile_robot_navigation import viz
+from mobile_robot_navigation.environment import POI, ChopperScape
 
-HERE = Path(__file__).parent
+HERE = Path(__file__).parents[1]
 FIG = HERE / "figures"
 ASSETS = HERE / "assets"
 FIG.mkdir(parents=True, exist_ok=True)
 
-plt.rcParams.update({
-    "font.family": "DejaVu Sans",
-    "font.size": 11,
-    "axes.titlesize": 12,
-    "axes.titleweight": "bold",
-    "savefig.bbox": "tight",
-    "figure.dpi": 130,
-})
+plt.rcParams.update(
+    {
+        "font.family": "DejaVu Sans",
+        "font.size": 11,
+        "axes.titlesize": 12,
+        "axes.titleweight": "bold",
+        "savefig.bbox": "tight",
+        "figure.dpi": 130,
+    },
+)
 
 INK = "#27324a"
 ACCENT = "#2f6df0"
@@ -60,19 +64,33 @@ def fig_environment():
     viz.render_env(env, ax=ax)
     sx, sy = env.chopper.x, env.chopper.y
     ax.annotate(
-        "start", (sx, sy), (sx, sy + 60),
-        color=INK, fontsize=10,
-        ha="center", arrowprops=dict(arrowstyle="-", color=INK, lw=0.8),
+        "start",
+        (sx, sy),
+        (sx, sy + 60),
+        color=INK,
+        fontsize=10,
+        ha="center",
+        arrowprops={"arrowstyle": "-", "color": INK, "lw": 0.8},
     )
     ax.annotate(
-        "goal", (env.target_x, env.target_y), (env.target_x - 70, env.target_y),
-        color=GOOD, fontsize=10, ha="right", va="center",
+        "goal",
+        (env.target_x, env.target_y),
+        (env.target_x - 70, env.target_y),
+        color=GOOD,
+        fontsize=10,
+        ha="right",
+        va="center",
     )
     first = env.obstacles[0]
     ax.text(
-        first.x + first.icon_w / 2, first.y + first.icon_h / 2,
-        "obstacle", color="white", fontsize=10,
-        ha="center", va="center", fontweight="bold",
+        first.x + first.icon_w / 2,
+        first.y + first.icon_h / 2,
+        "obstacle",
+        color="white",
+        fontsize=10,
+        ha="center",
+        va="center",
+        fontweight="bold",
     )
     ax.set_title(
         "ChopperScape navigation environment (one sampled layout)",
@@ -85,7 +103,7 @@ def fig_environment():
 # --------------------------------------------------------------------------
 def fig_layouts():
     fig, axes = plt.subplots(1, 3, figsize=(11.4, 3.2))
-    for ax, seed in zip(axes, (21, 22, 23)):
+    for ax, seed in zip(axes, (21, 22, 23), strict=False):
         env = ChopperScape(seed=seed)
         env.reset()
         viz.render_env(env, ax=ax, show_lidar=False)
@@ -93,7 +111,8 @@ def fig_layouts():
     fig.suptitle(
         "Per-episode layout randomization: obstacle count, size, position "
         "and start pose all vary",
-        fontsize=12, fontweight="bold",
+        fontsize=12,
+        fontweight="bold",
     )
     fig.tight_layout(rect=(0, 0, 1, 0.92))
     save(fig, "layouts")
@@ -105,23 +124,35 @@ def fig_layouts():
 def _layer(ax, x, y, w, h, text, face):
     ax.add_patch(
         FancyBboxPatch(
-            (x, y), w, h,
+            (x, y),
+            w,
+            h,
             boxstyle="round,pad=0.02,rounding_size=0.06",
-            facecolor=face, edgecolor=INK, linewidth=1.3,
+            facecolor=face,
+            edgecolor=INK,
+            linewidth=1.3,
         ),
     )
     ax.text(
-        x + w / 2, y + h / 2, text, ha="center", va="center",
-        fontsize=10, color=INK,
+        x + w / 2,
+        y + h / 2,
+        text,
+        ha="center",
+        va="center",
+        fontsize=10,
+        color=INK,
     )
 
 
 def _arrow(ax, x0, y0, x1, y1):
     ax.add_patch(
         FancyArrowPatch(
-            (x0, y0), (x1, y1),
-            arrowstyle="-|>", mutation_scale=14,
-            color=INK, linewidth=1.2,
+            (x0, y0),
+            (x1, y1),
+            arrowstyle="-|>",
+            mutation_scale=14,
+            color=INK,
+            linewidth=1.2,
         ),
     )
 
@@ -137,11 +168,16 @@ def fig_architecture():
         ),
         (
             "Critic  $Q(s,a)$",
-            ["state+action\n(12)", "FC 128\nReLU", "FC 256\nReLU", "Q-value\n(1)"],
+            [
+                "state+action\n(12)",
+                "FC 128\nReLU",
+                "FC 256\nReLU",
+                "Q-value\n(1)",
+            ],
             ["#eafaf2", "#cdeedd", "#b5e6cd", "#8fd9b6"],
         ),
     ]
-    for ax, (title, labels, faces) in zip(axes, nets):
+    for ax, (title, labels, faces) in zip(axes, nets, strict=False):
         ax.set_xlim(0, 10)
         ax.set_ylim(0, 4)
         ax.axis("off")
@@ -150,7 +186,7 @@ def fig_architecture():
         w, gap = 1.9, 0.45
         total = n * w + (n - 1) * gap
         x = (10 - total) / 2
-        for i, (lab, face) in enumerate(zip(labels, faces)):
+        for i, (lab, face) in enumerate(zip(labels, faces, strict=False)):
             _layer(ax, x, 1.3, w, 1.4, lab, face)
             if i < n - 1:
                 _arrow(ax, x + w, 2.0, x + w + gap, 2.0)
@@ -158,7 +194,8 @@ def fig_architecture():
 
     fig.suptitle(
         "DDPG networks: deterministic actor and action-value critic",
-        fontsize=12, fontweight="bold",
+        fontsize=12,
+        fontweight="bold",
     )
     fig.tight_layout(rect=(0, 0, 1, 0.93))
     save(fig, "architecture")
@@ -199,7 +236,11 @@ def fig_poi_heatmap():
             dist_o = math.hypot(rover[0] - px, rover[1] - py)
             dist_g = math.hypot(env.target_x - px, env.target_y - py)
             h = probe.calculate_heuristic_score(
-                dist_o, dist_g, 5, 20, probe.kernel_size,
+                dist_o,
+                dist_g,
+                5,
+                20,
+                probe.kernel_size,
                 env.exploration_field,
             )
             grid[j, i] = h
@@ -214,8 +255,11 @@ def fig_poi_heatmap():
 
     extent = (0, width, height, 0)
     im = ax.imshow(
-        grid, extent=extent, origin="upper",
-        cmap=cmap, aspect="equal",
+        grid,
+        extent=extent,
+        origin="upper",
+        cmap=cmap,
+        aspect="equal",
     )
     obstacles = [
         {"x_max": o[0], "x_min": o[1], "y_max": o[2], "y_min": o[3]}
@@ -251,8 +295,11 @@ def fig_learning_curve():
     ax1.plot(rewards, color=ACCENT, alpha=0.25, linewidth=0.8, label="episode")
     ma = _moving_avg(rewards, 25)
     ax1.plot(
-        np.arange(len(ma)) + 12, ma,
-        color=ACCENT, linewidth=2.2, label="25-ep moving avg",
+        np.arange(len(ma)) + 12,
+        ma,
+        color=ACCENT,
+        linewidth=2.2,
+        label="25-ep moving avg",
     )
     ax1.axhline(0, color=INK, linewidth=0.6, linestyle=":")
     ax1.set_xlabel("episode")
@@ -263,9 +310,7 @@ def fig_learning_curve():
 
     win = 100
     buckets = np.arange(0, len(rewards), win)
-    rate = [
-        (rewards[b:b + win] > 50).mean() * 100 for b in buckets
-    ]
+    rate = [(rewards[b : b + win] > 50).mean() * 100 for b in buckets]
     ax2.bar(buckets + win / 2, rate, color=GOOD, alpha=0.85, width=win * 0.8)
     ax2.set_ylabel("arrival rate (%)")
     ax2.set_xlabel("episode")
@@ -287,20 +332,32 @@ def _draw_rollout(ax, t, color, label, dashed=False):
     viz.draw_target(ax, tuple(t["target"]), t["target_threshold"])
     if dashed:
         ax.plot(
-            t["xs"], t["ys"], color=color, linewidth=2.0,
-            alpha=0.7, linestyle="--", zorder=6, label=label,
+            t["xs"],
+            t["ys"],
+            color=color,
+            linewidth=2.0,
+            alpha=0.7,
+            linestyle="--",
+            zorder=6,
+            label=label,
         )
         ax.scatter(
-            t["xs"][-1], t["ys"][-1], color=color, marker="x",
-            s=80, zorder=8,
+            t["xs"][-1],
+            t["ys"][-1],
+            color=color,
+            marker="x",
+            s=80,
+            zorder=8,
         )
     else:
         viz.draw_trajectory(ax, t["xs"], t["ys"], color=color, label=label)
     alpha0 = t["alphas"][0] if t.get("alphas") else 0.0
     viz.draw_rover(ax, t["xs"][0], t["ys"][0], alpha0)
     ax.legend(
-        frameon=False, fontsize=9,
-        loc="lower left", bbox_to_anchor=(0.03, 0.04),
+        frameon=False,
+        fontsize=9,
+        loc="lower left",
+        bbox_to_anchor=(0.03, 0.04),
     )
 
 
@@ -320,14 +377,17 @@ def fig_trajectory():
         return
 
     fig, axes = plt.subplots(
-        1, len(panels), figsize=(5.6 * len(panels), 4.4),
+        1,
+        len(panels),
+        figsize=(5.6 * len(panels), 4.4),
     )
     axes = [axes] if len(panels) == 1 else list(axes)
-    for ax, (t, color, label, dashed) in zip(axes, panels):
+    for ax, (t, color, label, dashed) in zip(axes, panels, strict=False):
         _draw_rollout(ax, t, color, label, dashed)
     fig.suptitle(
         "Deterministic policy on unseen random layouts",
-        fontsize=12, fontweight="bold",
+        fontsize=12,
+        fontweight="bold",
     )
     fig.tight_layout(rect=(0, 0, 1, 0.94))
     save(fig, "trajectory")

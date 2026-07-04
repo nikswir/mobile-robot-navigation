@@ -69,7 +69,8 @@ Run all: `pre-commit run --all-files`. Run one: `pre-commit run ruff-check`.
 **`pre-commit` only sees git-tracked files** — a new, unstaged file is *silently
 skipped* by `pre-commit run --all-files`, so a green run can hide a broken new
 file. `git add` new files before trusting the gate, or audit uncommitted work by
-running the tools directly over the filesystem (`ruff check src tests tools`,
+running the tools directly over the filesystem (`ruff check src tests tools
+report/scripts`,
 `mypy`, the `check-*` scripts). On `git commit` the hooks run on the staged
 files — that is when the gate is real.
 
