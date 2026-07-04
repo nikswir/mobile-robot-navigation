@@ -1,8 +1,8 @@
-"""Top-down vector visualization of the ChopperScape navigation scene.
+"""Top-down vector visualization of the MobileRobotEnv navigation scene.
 
 Draws the field, obstacles, target and a stylized mobile rover (heading and
 lidar rays) as clean matplotlib vector graphics. Used by both
-`ChopperScape.render` and the report figure scripts. Matplotlib is imported at
+`MobileRobotEnv.render` and the report figure scripts. Matplotlib is imported at
 module load, so this module is only pulled in when something actually renders --
 the training path (`agent`, `lib`, `run`) never imports it.
 """
@@ -18,7 +18,7 @@ from matplotlib.transforms import Affine2D
 from matplotlib.patches import Circle, Polygon, FancyBboxPatch
 
 if TYPE_CHECKING:
-    from mobile_robot_navigation.environment import ChopperScape
+    from mobile_robot_navigation.environment import MobileRobotEnv
 
 ########################################
 #               Palette                #
@@ -305,14 +305,14 @@ def draw_trajectory(
 
 
 def render_env(
-    env: ChopperScape,
+    env: MobileRobotEnv,
     ax: Axes | None = None,
     show_lidar: bool = True,
 ) -> Axes:
-    """Render the live state of a `ChopperScape` instance.
+    """Render the live state of a `MobileRobotEnv` instance.
 
     Pulls geometry straight off the environment, so it always matches the
-    current chopper pose, obstacles and target.
+    current robot pose, obstacles and target.
     """
 
     if ax is None:
@@ -336,17 +336,17 @@ def render_env(
     if show_lidar:
         draw_lidar(
             ax,
-            env.chopper.x,
-            env.chopper.y,
-            env.chopper.alpha,
-            env.chopper.scan_range,
+            env.robot.x,
+            env.robot.y,
+            env.robot.alpha,
+            env.robot.scan_range,
             env.scan(),
             env.max_linear,
         )
     draw_rover(
         ax,
-        env.chopper.x,
-        env.chopper.y,
-        env.chopper.alpha,
+        env.robot.x,
+        env.robot.y,
+        env.robot.alpha,
     )
     return ax

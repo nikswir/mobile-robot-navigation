@@ -29,7 +29,7 @@ from matplotlib.patches import Circle
 
 from mobile_robot_navigation import viz
 from mobile_robot_navigation.agent import Actor
-from mobile_robot_navigation.environment import ChopperScape
+from mobile_robot_navigation.environment import MobileRobotEnv
 
 SEED = 29
 N_EPISODES = 10
@@ -50,7 +50,7 @@ MUTED = "#6b7896"
 def record_episode(actor, device, env):
     """Roll out one deterministic episode and record poses + scans."""
     state = env.reset()
-    frames = [(env.chopper.x, env.chopper.y, env.chopper.alpha, env.scan())]
+    frames = [(env.robot.x, env.robot.y, env.robot.alpha, env.scan())]
     outcome = "timeout"
     for _ in range(MAX_STEPS):
         s = torch.FloatTensor(state).reshape(1, -1).to(device)
@@ -58,7 +58,7 @@ def record_episode(actor, device, env):
             a = actor(s).cpu().numpy().reshape(-1)
         state, _r, done, arrived = env.step(a)
         frames.append(
-            (env.chopper.x, env.chopper.y, env.chopper.alpha, env.scan()),
+            (env.robot.x, env.robot.y, env.robot.alpha, env.scan()),
         )
         if arrived:
             outcome = "arrived"
@@ -75,7 +75,7 @@ def record_episode(actor, device, env):
         "width": env.observation_shape[1],
         "height": env.observation_shape[0],
         "target_threshold": env.target_threshold,
-        "scan_range": list(env.chopper.scan_range),
+        "scan_range": list(env.robot.scan_range),
         "max_linear": env.max_linear,
     }
     return frames, outcome, meta
@@ -182,7 +182,7 @@ def main() -> None:
     actor.load_state_dict(ckpt["model"])
     actor.to(device).eval()
 
-    env = ChopperScape(seed=SEED)
+    env = MobileRobotEnv(seed=SEED)
     episodes = []
     for _ in range(MAX_TRIES):
         frames, outcome, meta = record_episode(actor, device, env)

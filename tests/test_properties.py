@@ -16,7 +16,7 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 
 from mobile_robot_navigation.agent import Actor, OUNoise
-from mobile_robot_navigation.environment import ChopperScape
+from mobile_robot_navigation.environment import MobileRobotEnv
 
 # A single CPU device keeps the tests deterministic and GPU-independent.
 CPU = torch.device("cpu")
@@ -87,7 +87,7 @@ def test_ou_noise_reset_and_sample(action_size: int, mu: float) -> None:
 @given(seed=st.integers(min_value=0, max_value=2**16))
 def test_reset_returns_bounded_length_10_observation(seed: int) -> None:
     """A reset (fresh random layout) yields 10 bounded observation values."""
-    env = ChopperScape(seed=seed)
+    env = MobileRobotEnv(seed=seed)
 
     obs = env.reset()
 

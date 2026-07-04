@@ -1,4 +1,4 @@
-"""Randomized-layout invariants for ChopperScape (CPU, stage 1).
+"""Randomized-layout invariants for MobileRobotEnv (CPU, stage 1).
 
 Every `reset()` samples a fresh task, so these tests pin the sampling
 contract: obstacle count/size stay within the configured bounds, everything
@@ -15,7 +15,7 @@ from mobile_robot_navigation.environment import (
     POI,
     GRID_CELL,
     free_grid,
-    ChopperScape,
+    MobileRobotEnv,
     reachable_cells,
 )
 
@@ -23,7 +23,7 @@ WIDTH = 800
 HEIGHT = 600
 
 
-def _layout_rects(env: ChopperScape) -> list[tuple[int, int, int, int]]:
+def _layout_rects(env: MobileRobotEnv) -> list[tuple[int, int, int, int]]:
     """The current episode's obstacle rectangles as int tuples."""
     return [
         (int(a), int(b), int(c), int(d))
@@ -37,7 +37,7 @@ def _layout_rects(env: ChopperScape) -> list[tuple[int, int, int, int]]:
 
 
 def test_obstacle_count_and_size_within_bounds() -> None:
-    env = ChopperScape(seed=0)
+    env = MobileRobotEnv(seed=0)
     for _ in range(10):
         env.reset()
 
@@ -54,7 +54,7 @@ def test_obstacle_count_and_size_within_bounds() -> None:
 
 
 def test_layouts_differ_across_resets() -> None:
-    env = ChopperScape(seed=1)
+    env = MobileRobotEnv(seed=1)
     env.reset()
     first = _layout_rects(env)
     env.reset()
@@ -64,25 +64,25 @@ def test_layouts_differ_across_resets() -> None:
 
 
 def test_start_pose_is_clear_and_far_from_goal() -> None:
-    env = ChopperScape(seed=2)
+    env = MobileRobotEnv(seed=2)
     for _ in range(10):
         env.reset()
 
         # ── No obstacle touches the spawn footprint ──
         for obstacle in env.obstacles:
-            assert not env.has_collided(env.chopper, obstacle)
+            assert not env.has_collided(env.robot, obstacle)
 
         # ── Inside the field, far enough from the target ──
-        assert not env.out_of_boundary(env.chopper)
+        assert not env.out_of_boundary(env.robot)
         start_dist = np.hypot(
-            env.chopper.x - env.target_x,
-            env.chopper.y - env.target_y,
+            env.robot.x - env.target_x,
+            env.robot.y - env.target_y,
         )
         assert start_dist >= env.min_start_distance
 
 
 def test_every_layout_is_solvable() -> None:
-    env = ChopperScape(seed=3)
+    env = MobileRobotEnv(seed=3)
     for _ in range(10):
         env.reset()
 
@@ -91,15 +91,15 @@ def test_every_layout_is_solvable() -> None:
             _layout_rects(env),
             WIDTH,
             HEIGHT,
-            env.chopper.icon_w,
+            env.robot.icon_w,
         )
         reach = reachable_cells(
             free,
             (env.target_y // GRID_CELL, env.target_x // GRID_CELL),
         )
         start_cell = (
-            int(env.chopper.y // GRID_CELL),
-            int(env.chopper.x // GRID_CELL),
+            int(env.robot.y // GRID_CELL),
+            int(env.robot.x // GRID_CELL),
         )
         assert reach[start_cell]
 
@@ -133,9 +133,9 @@ def test_blocked_start_reaches_nothing() -> None:
 
 
 def test_arrival_is_terminal_with_bonus_reward() -> None:
-    env = ChopperScape(seed=4)
+    env = MobileRobotEnv(seed=4)
     env.reset()
-    env.chopper.set_position(env.target_x - 5, env.target_y, 0.0)
+    env.robot.set_position(env.target_x - 5, env.target_y, 0.0)
 
     _obs, reward, done, arrived = env.step(np.array([-1.0, 0.0]))
 
@@ -145,10 +145,10 @@ def test_arrival_is_terminal_with_bonus_reward() -> None:
 
 
 def test_collision_terminates_with_penalty() -> None:
-    env = ChopperScape(seed=5)
+    env = MobileRobotEnv(seed=5)
     env.reset()
     first = env.obstacles[0]
-    env.chopper.set_position(first.x + 1.0, first.y + 1.0, 0.0)
+    env.robot.set_position(first.x + 1.0, first.y + 1.0, 0.0)
 
     _obs, reward, done, arrived = env.step(np.array([-1.0, 0.0]))
 
@@ -158,14 +158,14 @@ def test_collision_terminates_with_penalty() -> None:
 
 
 def test_reset_clears_exploration_memory() -> None:
-    env = ChopperScape(seed=6)
+    env = MobileRobotEnv(seed=6)
     env.reset()
-    assert env.chopper.POI_list
+    assert env.robot.POI_list
 
     # ── Explicit clear empties the POI memory ──
-    env.chopper.reset_exploration()
-    assert env.chopper.POI_list == []
-    assert not env.chopper.POI_field.any()
+    env.robot.reset_exploration()
+    assert env.robot.POI_list == []
+    assert not env.robot.POI_field.any()
 
     # ── A fresh reset marks exactly the new layout's obstacles with 5 ──
     env.reset()
@@ -176,12 +176,12 @@ def test_reset_clears_exploration_memory() -> None:
 
 
 def test_poi_fallback_targets_the_goal() -> None:
-    env = ChopperScape(seed=7)
+    env = MobileRobotEnv(seed=7)
     env.reset()
 
     # ── With no candidate POIs, the goal itself becomes the POI ──
-    env.chopper.reset_exploration()
-    poi = env.chopper.get_POI(env.target, env.exploration_field)
+    env.robot.reset_exploration()
+    poi = env.robot.get_POI(env.target, env.exploration_field)
     assert poi is None
 
     fallback = poi or POI(env.target_x, env.target_y)

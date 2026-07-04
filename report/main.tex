@@ -101,7 +101,7 @@ in.
 
 This report documents an end-to-end navigation system built around DDPG. Our
 contributions are: (i) a Markov-decision-process formulation of a lidar-driven
-navigation environment (\emph{ChopperScape}) with per-episode layout
+navigation environment (\emph{MobileRobotEnv}) with per-episode layout
 randomization and a BFS-certified solvability guarantee; (ii) a frontier-style
 POI heuristic that compresses the lidar field into a single goal-directed
 sub-target and feeds three scalar features to the policy; (iii) an empirical
@@ -144,7 +144,7 @@ $L=\sqrt{800^2+600^2}$.
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.82\linewidth]{environment.pdf}
-  \caption{The \emph{ChopperScape} environment (one sampled layout). The rover
+  \caption{The \emph{MobileRobotEnv} environment (one sampled layout). The rover
   (top-down) emits seven lidar beams (orange) that terminate at the nearest
   obstacle or wall. Soft blue blocks are obstacles; the green flag with a
   tolerance halo is the goal.}
@@ -372,7 +372,7 @@ The original environment rendered a raster canvas with bitmap icons. We
 replaced it with a vector renderer (\texttt{viz.py}) that draws the field,
 rounded obstacles, a goal flag, lidar beams, trajectories, and a stylised
 top-down rover with heading and wheels. The same primitives back
-\texttt{ChopperScape.render()}, every figure in this report, and an animated
+\texttt{MobileRobotEnv.render()}, every figure in this report, and an animated
 GIF of policy rollouts embedded in the repository README, so the paper and the
 live environment are guaranteed to agree. All figures are emitted as scalable
 PDF.

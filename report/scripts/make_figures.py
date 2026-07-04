@@ -23,7 +23,7 @@ from pathlib import Path
 from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
 
 from mobile_robot_navigation import viz
-from mobile_robot_navigation.environment import POI, ChopperScape
+from mobile_robot_navigation.environment import POI, MobileRobotEnv
 
 HERE = Path(__file__).parents[1]
 FIG = HERE / "figures"
@@ -58,11 +58,11 @@ def save(fig, name):
 # 1. Environment schematic
 # --------------------------------------------------------------------------
 def fig_environment():
-    env = ChopperScape(seed=13)
+    env = MobileRobotEnv(seed=13)
     env.reset()
     fig, ax = plt.subplots(figsize=(7.4, 5.6))
     viz.render_env(env, ax=ax)
-    sx, sy = env.chopper.x, env.chopper.y
+    sx, sy = env.robot.x, env.robot.y
     ax.annotate(
         "start",
         (sx, sy),
@@ -93,7 +93,7 @@ def fig_environment():
         fontweight="bold",
     )
     ax.set_title(
-        "ChopperScape navigation environment (one sampled layout)",
+        "MobileRobotEnv navigation environment (one sampled layout)",
     )
     save(fig, "environment")
 
@@ -104,7 +104,7 @@ def fig_environment():
 def fig_layouts():
     fig, axes = plt.subplots(1, 3, figsize=(11.4, 3.2))
     for ax, seed in zip(axes, (21, 22, 23), strict=False):
-        env = ChopperScape(seed=seed)
+        env = MobileRobotEnv(seed=seed)
         env.reset()
         viz.render_env(env, ax=ax, show_lidar=False)
         ax.set_title(f"sampled layout (seed {seed})", fontsize=10)
@@ -205,9 +205,9 @@ def fig_architecture():
 # 3. POI heuristic field
 # --------------------------------------------------------------------------
 def fig_poi_heatmap():
-    env = ChopperScape(seed=13)
+    env = MobileRobotEnv(seed=13)
     env.reset()
-    rover = (env.chopper.x, env.chopper.y)
+    rover = (env.robot.x, env.robot.y)
 
     width = env.observation_shape[1]
     height = env.observation_shape[0]

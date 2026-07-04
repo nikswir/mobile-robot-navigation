@@ -1,4 +1,4 @@
-"""ChopperScape environment for mobile-robot navigation.
+"""MobileRobotEnv environment for mobile-robot navigation.
 
 Every `reset()` samples a fresh task: a random number of axis-aligned
 rectangular obstacles with random sizes and positions, plus a random start
@@ -59,11 +59,11 @@ class Point:
 
 
 ########################################
-#               Chopper                #
+#                Robot                 #
 ########################################
 
 
-class Chopper(Point):
+class Robot(Point):
     def __init__(
         self,
         name: str,
@@ -321,7 +321,7 @@ def _overlaps(a: Rect, b: Rect, gap: int = 20) -> bool:
 ########################################
 
 
-class ChopperScape(Env):
+class MobileRobotEnv(Env):
     def __init__(
         self,
         *,
@@ -376,8 +376,8 @@ class ChopperScape(Env):
         self.max_linear = math.hypot(observation_height, observation_width)
 
         # ── Elements; the layout itself is sampled on every reset() ──
-        self.chopper = Chopper(
-            "chopper",
+        self.robot = Robot(
+            "robot",
             self.x_max,
             self.x_min,
             self.y_max,
@@ -394,7 +394,7 @@ class ChopperScape(Env):
         self.obstacles_cord: list[tuple[float, float, float, float]] = (
             self._border_rects()
         )
-        self.elements: list[Point] = [self.chopper]
+        self.elements: list[Point] = [self.robot]
         self.exploration_field = np.zeros(
             (observation_height, observation_width),
         )
@@ -497,7 +497,7 @@ class ChopperScape(Env):
                 rects,
                 self.observation_shape[1],
                 self.observation_shape[0],
-                self.chopper.icon_w,
+                self.robot.icon_w,
             )
             reach = reachable_cells(free, target_cell)
             starts = self._start_candidates(reach)
@@ -537,12 +537,12 @@ class ChopperScape(Env):
         )
         for x_hi, x_lo, y_hi, y_lo in rects:
             self.exploration_field[y_lo:y_hi, x_lo:x_hi] = 5
-        self.chopper.reset_exploration()
+        self.robot.reset_exploration()
 
-        # ── 3. Place the chopper and the target ──
-        self.chopper.set_position(x, y, alpha)
+        # ── 3. Place the robot and the target ──
+        self.robot.set_position(x, y, alpha)
         self.target.set_position(self.target_x, self.target_y)
-        self.elements = [self.chopper, *self.obstacles]
+        self.elements = [self.robot, *self.obstacles]
         self.prev_target_dist = math.hypot(
             x - self.target_x,
             y - self.target_y,
@@ -551,11 +551,11 @@ class ChopperScape(Env):
         # ── 4. Seed the first POIs from the initial scan ──
         scan = self.scan()
         self.exploration_field[
-            int(self.chopper.y) : int(self.chopper.y + self.chopper.icon_h),
-            int(self.chopper.x) : int(self.chopper.x + self.chopper.icon_w),
+            int(self.robot.y) : int(self.robot.y + self.robot.icon_h),
+            int(self.robot.x) : int(self.robot.x + self.robot.icon_w),
         ] = 1
-        self.chopper.set_POI(scan, self.exploration_field)
-        self.POI = self.chopper.get_POI(
+        self.robot.set_POI(scan, self.exploration_field)
+        self.POI = self.robot.get_POI(
             self.target,
             self.exploration_field,
         ) or POI(self.target_x, self.target_y)
@@ -579,11 +579,11 @@ class ChopperScape(Env):
 
     def scan(self) -> list[float]:
         scan_result = []
-        x_0 = self.chopper.x + self.chopper.icon_w // 2
-        y_0 = self.chopper.y + self.chopper.icon_h // 2
-        for detector_alpha in self.chopper.scan_range:
+        x_0 = self.robot.x + self.robot.icon_w // 2
+        y_0 = self.robot.y + self.robot.icon_h // 2
+        for detector_alpha in self.robot.scan_range:
             min_dist = self.max_linear
-            scan_alpha = (self.chopper.alpha + detector_alpha) % (2 * np.pi)
+            scan_alpha = (self.robot.alpha + detector_alpha) % (2 * np.pi)
             for x_max, x_min, y_max, y_min in self.obstacles_cord:
                 if np.pi / 2 < scan_alpha < 3 * np.pi / 2:
                     if x_0 > x_max:
@@ -659,11 +659,9 @@ class ChopperScape(Env):
 
         return (
             elem_x - self.x_min < self.obstacle_threshold
-            or self.x_max - elem_x - self.chopper.icon_w
-            < self.obstacle_threshold
+            or self.x_max - elem_x - self.robot.icon_w < self.obstacle_threshold
             or elem_y - self.y_min < self.obstacle_threshold
-            or self.y_max - elem_y - self.chopper.icon_h
-            < self.obstacle_threshold
+            or self.y_max - elem_y - self.robot.icon_h < self.obstacle_threshold
         )
 
     ########################################
@@ -678,14 +676,14 @@ class ChopperScape(Env):
         """
         poi = self.POI
         dist_to_poi = math.hypot(
-            self.chopper.x - poi.x,
-            self.chopper.y - poi.y,
+            self.robot.x - poi.x,
+            self.robot.y - poi.y,
         )
         rel_theta = math.atan2(
-            poi.y - self.chopper.y,
-            poi.x - self.chopper.x,
+            poi.y - self.robot.y,
+            poi.x - self.robot.x,
         ) % (2 * np.pi)
-        diff_angle = (rel_theta - self.chopper.alpha + np.pi) % (
+        diff_angle = (rel_theta - self.robot.alpha + np.pi) % (
             2 * np.pi
         ) - np.pi
         return dist_to_poi, rel_theta, diff_angle
@@ -710,20 +708,16 @@ class ChopperScape(Env):
         done = 0
         arrived = 0
 
-        # ── 1. Advance the chopper with the chosen action ──
-        self.chopper.alpha += action[1]
-        self.chopper.alpha = self.chopper.alpha % (2 * np.pi)
-        self.chopper.x += (
-            10 * ((action[0] + 1) / 2) * np.cos(self.chopper.alpha)
-        )
-        self.chopper.y += (
-            10 * ((action[0] + 1) / 2) * np.sin(self.chopper.alpha)
-        )
+        # ── 1. Advance the robot with the chosen action ──
+        self.robot.alpha += action[1]
+        self.robot.alpha = self.robot.alpha % (2 * np.pi)
+        self.robot.x += 10 * ((action[0] + 1) / 2) * np.cos(self.robot.alpha)
+        self.robot.y += 10 * ((action[0] + 1) / 2) * np.sin(self.robot.alpha)
 
         # ── 2. Reward: arrival bonus, or shaping plus goal progress ──
         dist_to_target = math.hypot(
-            self.chopper.x - self.target.x,
-            self.chopper.y - self.target.y,
+            self.robot.x - self.target.x,
+            self.robot.y - self.target.y,
         )
         if dist_to_target < self.target_threshold:
             reward = 101
@@ -737,32 +731,32 @@ class ChopperScape(Env):
         self.prev_target_dist = dist_to_target
 
         # ── 3. Terminal checks: leaving the field or hitting a block ──
-        if self.out_of_boundary(self.chopper):
+        if self.out_of_boundary(self.robot):
             done = 1
             reward = -50
         for obstacle in self.obstacles:
-            if self.has_collided(self.chopper, obstacle):
+            if self.has_collided(self.robot, obstacle):
                 done = 1
                 reward = -50
 
         # ── 4. Expand the explored field and seed new POIs ──
-        chopper_patch = self.exploration_field[
-            int(self.chopper.y) : int(self.chopper.y + self.chopper.icon_h),
-            int(self.chopper.x) : int(self.chopper.x + self.chopper.icon_w),
+        robot_patch = self.exploration_field[
+            int(self.robot.y) : int(self.robot.y + self.robot.icon_h),
+            int(self.robot.x) : int(self.robot.x + self.robot.icon_w),
         ]
-        if not done and (chopper_patch == 0).all():
+        if not done and (robot_patch == 0).all():
             scan = self.scan()
             self.exploration_field[
-                int(self.chopper.y) : int(self.chopper.y + self.chopper.icon_h),
-                int(self.chopper.x) : int(self.chopper.x + self.chopper.icon_w),
+                int(self.robot.y) : int(self.robot.y + self.robot.icon_h),
+                int(self.robot.x) : int(self.robot.x + self.robot.icon_w),
             ] = 1
 
-            self.chopper.set_POI(scan, self.exploration_field)
+            self.robot.set_POI(scan, self.exploration_field)
 
         # ── 5. Switch to a fresh POI when the current one is reached ──
         dist_to_poi, _, _ = self._poi_features()
         if dist_to_poi < self.POI_threshold:
-            self.POI = self.chopper.get_POI(
+            self.POI = self.robot.get_POI(
                 self.target,
                 self.exploration_field,
                 self.POI,
