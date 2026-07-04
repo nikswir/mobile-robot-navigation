@@ -105,6 +105,10 @@ drops what can't be meaningfully exercised (`pragma: no cover`,
   types, style checks) + `pytest`, on cheap runners with no hardware. Docs-only
   pushes are skipped (`paths-ignore`).
 - **Stage 2 (on demand)** — heavy tests on real hardware; not on every push.
+- **Report** — `report/main.tex` is compiled by TeX Live in CI
+  (`.github/workflows/report.yml`); the PDF is **not committed** — PRs get it
+  as a build artifact, pushes to main refresh the rolling `report` release
+  (the stable download URL in the README).
 
 CI invokes `pre-commit`, not the tools directly — one source of truth shared
 with local commits.
