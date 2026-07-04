@@ -37,8 +37,10 @@ jobs:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           plugin_marketplaces: 'https://github.com/anthropics/claude-code.git'
           plugins: 'code-review@claude-code-plugins'
-          # Allow the review to be submitted, then auto-merged on approval.
-          claude_args: '--allowed-tools "Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr review:*),Bash(gh pr merge:*)"'
+          # The /code-review skill needs to read files (Read/Grep/Glob), take
+          # diffs (git) and spawn its finder subagents (Task); the gh commands
+          # let it submit the verdict and queue the auto-merge.
+          claude_args: '--allowed-tools "Task,Read,Grep,Glob,Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr review:*),Bash(gh pr merge:*)"'
           prompt: |
             Review pull request #${{ github.event.pull_request.number }} in
             ${{ github.repository }} with /code-review:code-review.
