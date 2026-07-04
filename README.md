@@ -95,6 +95,10 @@ formulation matters more than the algorithm — the ablations:
   </tr>
 </table>
 
+The full write-up — problem formalization, method and experiments — is in the
+[report PDF](https://github.com/nikswir/mobile-robot-navigation/releases/download/report/main.pdf),
+compiled by CI from [report/main.tex](report/main.tex) on every change.
+
 ## Quickstart
 
 ```bash

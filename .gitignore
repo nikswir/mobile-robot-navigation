@@ -43,3 +43,6 @@ wandb/
 *.out
 *.toc
 *.synctex.gz
+
+# Report PDF — built by CI (.github/workflows/report.yml), not committed
+report/main.pdf
