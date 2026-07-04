@@ -19,7 +19,7 @@ graph TD
     SCHEMA --> TRAIN["lib.py · train(cfg, out_dir)<br/>orchestrates the run"]
 
     subgraph Env["environment.py"]
-        ENV["ChopperScape (gym.Env)"]
+        ENV["MobileRobotEnv (gym.Env)"]
         LAYOUT["reset() · random layout sampler<br/>BFS reachability guarantee"]
         SCAN["scan() · lidar-style angular sweep"]
         POI["POI heuristic<br/>set_POI / get_POI"]
@@ -55,10 +55,10 @@ graph TD
 - **`config_schema.py`** declares the typed `Config` (env and agent
   hyper-parameters: learning rates, `gamma`, soft-update `tau`, buffer size,
   OU-noise `theta`/`sigma`, episode counts) so a bad run fails fast.
-- **`lib.py`** is the orchestration layer: it builds the `ChopperScape`
+- **`lib.py`** is the orchestration layer: it builds the `MobileRobotEnv`
   environment and the agent, then drives `agent.train_policy` over episodes and
   writes results into the Hydra per-run output directory.
-- **`environment.py`** holds the `ChopperScape` `gym.Env`. Every `reset()`
+- **`environment.py`** holds the `MobileRobotEnv` `gym.Env`. Every `reset()`
   samples a fresh task: a random number of rectangular obstacles with random
   sizes and positions, plus a random start pose (position and heading). A
   breadth-first search over an inflated occupancy grid (`free_grid` /

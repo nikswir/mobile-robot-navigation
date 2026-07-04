@@ -13,8 +13,8 @@ import torch
 from dataclasses import dataclass
 
 from mobile_robot_navigation.config_schema import Config
-from mobile_robot_navigation.environment import ChopperScape
 from mobile_robot_navigation.agent import Actor, train_policy
+from mobile_robot_navigation.environment import MobileRobotEnv
 
 ########################################
 #           Public contract            #
@@ -41,7 +41,7 @@ def train(
 ) -> TrainResult:
     """Build the env and agent from `cfg`, train, and report the rewards."""
     # ── Build the environment from the environment group ──
-    env = ChopperScape(
+    env = MobileRobotEnv(
         target_threshold=cfg.environment.target_threshold,
         obstacle_threshold=cfg.environment.obstacle_threshold,
         poi_threshold=cfg.environment.poi_threshold,

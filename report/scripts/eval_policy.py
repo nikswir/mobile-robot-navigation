@@ -20,7 +20,7 @@ import numpy as np
 from pathlib import Path
 
 from mobile_robot_navigation.agent import Actor
-from mobile_robot_navigation.environment import ChopperScape
+from mobile_robot_navigation.environment import MobileRobotEnv
 
 SEED = 11
 N_ROLLOUTS = 300
@@ -31,16 +31,16 @@ ASSETS = Path(__file__).parents[1] / "assets"
 
 def rollout(actor, device, env):
     state = env.reset()
-    xs, ys, alphas = [env.chopper.x], [env.chopper.y], [env.chopper.alpha]
+    xs, ys, alphas = [env.robot.x], [env.robot.y], [env.robot.alpha]
     outcome = "timeout"
     for _ in range(MAX_STEPS):
         s = torch.FloatTensor(state).reshape(1, -1).to(device)
         with torch.no_grad():
             a = actor(s).cpu().numpy().reshape(-1)
         state, _r, done, arrived = env.step(a)
-        xs.append(env.chopper.x)
-        ys.append(env.chopper.y)
-        alphas.append(env.chopper.alpha)
+        xs.append(env.robot.x)
+        ys.append(env.robot.y)
+        alphas.append(env.robot.alpha)
         if arrived:
             outcome = "arrived"
             break
@@ -76,7 +76,7 @@ def main() -> None:
     actor.load_state_dict(ckpt["model"])
     actor.to(device).eval()
 
-    env = ChopperScape(seed=SEED)
+    env = MobileRobotEnv(seed=SEED)
     arrived = 0
     best = None
     worst = None

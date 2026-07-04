@@ -13,7 +13,7 @@ import torch
 import numpy as np
 
 from mobile_robot_navigation.agent import train_policy
-from mobile_robot_navigation.environment import ChopperScape
+from mobile_robot_navigation.environment import MobileRobotEnv
 
 CPU = torch.device("cpu")
 
@@ -24,7 +24,7 @@ def test_train_policy_smoke() -> None:
     torch.manual_seed(0)
 
     # ── Two tiny episodes: enough to exercise updates end-to-end ──
-    env = ChopperScape(seed=0)
+    env = MobileRobotEnv(seed=0)
     actor, rewards = train_policy(
         env,
         num_episodes=2,

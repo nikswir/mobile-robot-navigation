@@ -22,7 +22,7 @@ def test_exports() -> None:
         "Actor",
         "Critic",
         "OUNoise",
-        "ChopperScape",
+        "MobileRobotEnv",
     }
 
 

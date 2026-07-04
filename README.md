@@ -186,7 +186,7 @@ DDPG loop on CPU. Heavy tests stay behind a stage-2 gate (`RUN_STAGE2=1`).
 
 ```text
 src/mobile_robot_navigation/
-├── environment.py     ChopperScape: random solvable layouts, lidar, POI, reward
+├── environment.py     MobileRobotEnv: random solvable layouts, lidar, POI, reward
 ├── agent.py           DDPG: actor/critic, OU noise, replay, training loop
 ├── lib.py             library API: Config -> TrainResult
 ├── run.py             Hydra CLI entry point

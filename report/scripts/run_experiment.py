@@ -18,8 +18,8 @@ import numpy as np
 
 from pathlib import Path
 
-from mobile_robot_navigation.environment import ChopperScape
 from mobile_robot_navigation.agent import Actor, train_policy
+from mobile_robot_navigation.environment import MobileRobotEnv
 
 SEED = 7
 EPISODES = 3000
@@ -45,18 +45,18 @@ def select_device() -> torch.device:
 
 def greedy_trajectory(actor: Actor, device: torch.device) -> dict:
     """Roll out one episode with the deterministic (no-noise) policy."""
-    env = ChopperScape(seed=SEED + 1)
+    env = MobileRobotEnv(seed=SEED + 1)
     state = env.reset()
-    xs, ys, alphas = [env.chopper.x], [env.chopper.y], [env.chopper.alpha]
+    xs, ys, alphas = [env.robot.x], [env.robot.y], [env.robot.alpha]
     outcome = "timeout"
     for _ in range(MAX_STEPS):
         s = torch.FloatTensor(state).reshape(1, -1).to(device)
         with torch.no_grad():
             action = actor(s).cpu().numpy().reshape(-1)
         state, _reward, done, arrived = env.step(action)
-        xs.append(env.chopper.x)
-        ys.append(env.chopper.y)
-        alphas.append(env.chopper.alpha)
+        xs.append(env.robot.x)
+        ys.append(env.robot.y)
+        alphas.append(env.robot.alpha)
         if arrived:
             outcome = "arrived"
             break
@@ -88,7 +88,7 @@ def main() -> None:
     device = select_device()
     print(f"device = {device}")
 
-    env = ChopperScape(seed=SEED)
+    env = MobileRobotEnv(seed=SEED)
     actor, rewards = train_policy(
         env,
         num_episodes=EPISODES,

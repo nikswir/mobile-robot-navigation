@@ -1,7 +1,7 @@
 [project]
 name = "mobile-robot-navigation"
 version = "0.1.0"
-description = "DDPG reinforcement-learning agent for mobile-robot navigation in the ChopperScape environment."
+description = "DDPG reinforcement-learning agent for mobile-robot navigation in the MobileRobotEnv environment."
 authors = [{ name = "Nikita S.", email = "nikswirlo@gmail.com" }]
 readme = "README.md"
 license = "MIT"

@@ -2,7 +2,7 @@
 
 Holds the Actor / Critic networks, the Ornstein-Uhlenbeck exploration noise,
 the replay-buffer helpers and `train_policy`, which runs the full DDPG training
-loop against a `ChopperScape` environment. Tensors are routed through a single
+loop against a `MobileRobotEnv` environment. Tensors are routed through a single
 `DEVICE` chosen once (CUDA, then Apple MPS, otherwise CPU).
 """
 
@@ -17,7 +17,7 @@ import torch.nn.functional as F
 
 from torch.optim.lr_scheduler import LinearLR
 
-from mobile_robot_navigation.environment import ChopperScape
+from mobile_robot_navigation.environment import MobileRobotEnv
 
 
 # Single device chosen once; every tensor is routed through it instead of
@@ -178,7 +178,7 @@ def sample_from_replay_buffer(
 
 
 def train_policy(
-    env: ChopperScape,
+    env: MobileRobotEnv,
     num_episodes: int,
     num_noise_episodes: int,
     max_steps: int,
@@ -378,7 +378,7 @@ def train_policy(
 if __name__ == "__main__":
     out_dir = "trained_models"
 
-    env = ChopperScape()
+    env = MobileRobotEnv()
 
     policy, rewards = train_policy(
         env,

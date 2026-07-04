@@ -18,7 +18,7 @@ from hydra.core.config_store import ConfigStore
 
 @dataclass
 class EnvironmentConfig:
-    """The ChopperScape environment knobs (layouts randomize per episode)."""
+    """The MobileRobotEnv environment knobs (layouts randomize per episode)."""
 
     poi_threshold: float = 5
     min_obstacles: int = 2
