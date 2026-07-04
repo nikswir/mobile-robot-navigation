@@ -9,9 +9,9 @@ repos:
       - id: check-yaml
       - id: check-merge-conflict
       - id: check-added-large-files
-        # 1 MB: the README demo GIF (docs/assets/demo.gif) is a legitimate
-        # ~0.8 MB binary; anything bigger still gets flagged.
-        args: [--maxkb=1024]
+        # 4 MB: the README demo GIF (docs/assets/demo.gif) is a legitimate
+        # multi-MB binary; anything bigger still gets flagged.
+        args: [--maxkb=4096]
 
   - repo: https://github.com/crate-ci/typos
     rev: v1.43.5

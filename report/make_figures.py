@@ -172,14 +172,21 @@ def fig_poi_heatmap():
     env.reset()
     rover = (env.chopper.x, env.chopper.y)
 
-    step = 12
-    xs = np.arange(40, env.observation_shape[1] - 40, step)
-    ys = np.arange(40, env.observation_shape[0] - 40, step)
+    width = env.observation_shape[1]
+    height = env.observation_shape[0]
+    step = 10
+    xs = np.arange(step / 2, width, step)
+    ys = np.arange(step / 2, height, step)
     grid = np.full((len(ys), len(xs)), np.nan)
 
     def in_obstacle(px, py):
+        # Shrink by one grid step so coloured cells reach under the patch
+        # edges — no light halo between the heatmap and the obstacles.
         for x_max, x_min, y_max, y_min in env.obstacles_cord[4:]:
-            if x_min <= px <= x_max and y_min <= py <= y_max:
+            if (
+                x_min + step <= px <= x_max - step
+                and y_min + step <= py <= y_max - step
+            ):
                 return True
         return False
 
@@ -198,10 +205,17 @@ def fig_poi_heatmap():
             grid[j, i] = h
 
     fig, ax = plt.subplots(figsize=(7.4, 5.6))
-    extent = (xs[0], xs[-1], ys[-1], ys[0])
+
+    # NaN cells sit under the obstacle patches: make them transparent and
+    # paint the axes in the obstacle colour so no white gaps appear.
+    cmap = plt.get_cmap("viridis_r").copy()
+    cmap.set_bad(alpha=0)
+    ax.set_facecolor(viz.OBSTACLE_FACE)
+
+    extent = (0, width, height, 0)
     im = ax.imshow(
         grid, extent=extent, origin="upper",
-        cmap="viridis_r", aspect="equal",
+        cmap=cmap, aspect="equal",
     )
     obstacles = [
         {"x_max": o[0], "x_min": o[1], "y_max": o[2], "y_min": o[3]}
@@ -210,8 +224,8 @@ def fig_poi_heatmap():
     viz.draw_obstacles(ax, obstacles)
     viz.draw_target(ax, (env.target_x, env.target_y), env.target_threshold)
     viz.draw_rover(ax, rover[0], rover[1], 0.4)
-    ax.set_xlim(20, env.observation_shape[1] - 20)
-    ax.set_ylim(env.observation_shape[0] - 20, 20)
+    ax.set_xlim(0, width)
+    ax.set_ylim(height, 0)
     ax.set_aspect("equal")
     ax.axis("off")
     cb = fig.colorbar(im, ax=ax, fraction=0.045, pad=0.02)
@@ -284,7 +298,10 @@ def _draw_rollout(ax, t, color, label, dashed=False):
         viz.draw_trajectory(ax, t["xs"], t["ys"], color=color, label=label)
     alpha0 = t["alphas"][0] if t.get("alphas") else 0.0
     viz.draw_rover(ax, t["xs"][0], t["ys"][0], alpha0)
-    ax.legend(frameon=False, fontsize=9, loc="lower left")
+    ax.legend(
+        frameon=False, fontsize=9,
+        loc="lower left", bbox_to_anchor=(0.03, 0.04),
+    )
 
 
 def fig_trajectory():

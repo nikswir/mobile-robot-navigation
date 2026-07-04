@@ -2,8 +2,9 @@
 
 Loads report/assets/actor.pt, rolls out the deterministic policy on freshly
 sampled layouts until it collects a few successful episodes, then re-renders
-each recorded episode frame-by-frame with the vector renderer (`viz`) and
-writes an animated GIF preview to docs/assets/demo.gif.
+each recorded episode frame-by-frame with the same vector renderer (`viz`)
+that draws every report figure, and writes an animated GIF preview to
+docs/assets/demo.gif.
 
     uv run python report/make_gif.py
 """
@@ -11,6 +12,7 @@ writes an animated GIF preview to docs/assets/demo.gif.
 from __future__ import annotations
 
 import io
+import os
 import random
 import contextlib
 from pathlib import Path
@@ -22,6 +24,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from PIL import Image
+from matplotlib.patches import Circle
 
 from mobile_robot_navigation import viz
 from mobile_robot_navigation.agent import Actor
@@ -34,9 +37,13 @@ MAX_TRIES = 200
 FRAME_STRIDE = 3
 HOLD_LAST = 8
 FRAME_MS = 90
+DPI = 110
 
 OUT = Path(__file__).parent.parent / "docs" / "assets" / "demo.gif"
 ASSETS = Path(__file__).parent / "assets"
+
+INK = "#27324a"
+MUTED = "#6b7896"
 
 
 def record_episode(actor, device, env):
@@ -73,31 +80,61 @@ def record_episode(actor, device, env):
     return frames, outcome, meta
 
 
-def render_frame(fig, ax, meta, trail, pose, episode, total):
-    """Draw one animation frame and rasterize it to a PIL image."""
+def render_frame(fig, ax, meta, trail, pose, episode, total, step):
+    """One frame: the field fills the whole image, HUD text sits on it.
+
+    Full-bleed with square corners, so no page background ever peeks out —
+    the GIF looks right on GitHub's dark and light themes alike.
+    """
+    w, h = meta["width"], meta["height"]
     ax.clear()
-    viz.draw_field(ax, meta["width"], meta["height"])
+
+    # ── Full-bleed field with a flat border ──
+    ax.set_facecolor(viz.FIELD_FACE)
+    ax.set_xlim(0, w)
+    ax.set_ylim(h, 0)
+    ax.set_aspect("equal")
+    ax.axis("off")
+
     viz.draw_obstacles(ax, meta["obstacles"])
     viz.draw_target(ax, meta["target"], meta["target_threshold"])
+
+    # ── Path so far, with the start marker used in the report figures ──
     if len(trail) > 1:
         xs, ys = zip(*trail)
         ax.plot(
-            xs, ys, color=viz.TRAIL_COLOR, linewidth=2.0,
-            alpha=0.75, solid_capstyle="round", zorder=7,
+            xs, ys, color=viz.TRAIL_COLOR, linewidth=2.2,
+            alpha=0.85, solid_capstyle="round", zorder=7,
         )
+        ax.add_patch(
+            Circle(
+                (xs[0], ys[0]), 7.0, facecolor="white",
+                edgecolor=viz.TRAIL_COLOR, linewidth=2.0, zorder=7,
+            ),
+        )
+
+    # ── Rover and its lidar fan, both anchored at the body centre ──
     x, y, alpha, scans = pose
+    cx, cy = x + 16, y + 16
     viz.draw_lidar(
-        ax, x, y, alpha,
+        ax, cx, cy, alpha,
         meta["scan_range"], scans, meta["max_linear"],
     )
-    viz.draw_rover(ax, x, y, alpha, scale=0.9)
-    ax.set_title(
-        f"DDPG policy on a random layout  ({episode}/{total})",
-        fontsize=10,
+    viz.draw_rover(ax, cx, cy, alpha)
+
+    # ── HUD on the field itself ──
+    ax.text(
+        16, 14, "DDPG policy on unseen random layouts",
+        color=INK, fontsize=11, fontweight="bold", va="top", zorder=9,
+    )
+    ax.text(
+        w - 16, 14, f"episode {episode:02d}/{total:02d} · step {step:03d}",
+        color=MUTED, fontsize=10, family="monospace",
+        ha="right", va="top", zorder=9,
     )
 
     buf = io.BytesIO()
-    fig.savefig(buf, format="png", dpi=100)
+    fig.savefig(buf, format="png", dpi=DPI, facecolor=viz.FIELD_FACE)
     buf.seek(0)
     return Image.open(buf).convert("P", palette=Image.ADAPTIVE)
 
@@ -108,7 +145,10 @@ def main() -> None:
     torch.manual_seed(SEED)
 
     device = torch.device(
-        "mps" if torch.backends.mps.is_available() else "cpu",
+        os.environ.get(
+            "MRN_DEVICE",
+            "mps" if torch.backends.mps.is_available() else "cpu",
+        ),
     )
     actor = Actor(10, 2)
     ckpt = torch.load(ASSETS / "actor.pt", map_location="cpu")
@@ -127,17 +167,18 @@ def main() -> None:
     if not episodes:
         raise SystemExit("no successful episodes to animate")
 
-    fig, ax = plt.subplots(figsize=(4.4, 3.3))
-    fig.subplots_adjust(left=0.02, right=0.98, top=0.9, bottom=0.02)
+    fig, ax = plt.subplots(figsize=(6.4, 4.8))
+    fig.subplots_adjust(left=0, right=1, top=1, bottom=0)
     images = []
     for idx, (frames, meta) in enumerate(episodes, start=1):
         picks = list(range(0, len(frames), FRAME_STRIDE))
         if picks[-1] != len(frames) - 1:
             picks.append(len(frames) - 1)
         for k in picks:
-            trail = [(f[0], f[1]) for f in frames[: k + 1]]
+            trail = [(f[0] + 16, f[1] + 16) for f in frames[: k + 1]]
             img = render_frame(
-                fig, ax, meta, trail, frames[k], idx, len(episodes),
+                fig, ax, meta, trail, frames[k],
+                idx, len(episodes), k,
             )
             images.append(img)
         images.extend([images[-1]] * HOLD_LAST)
