@@ -245,6 +245,7 @@ def train_policy(
 
     for episode in range(num_episodes):
         state = torch.FloatTensor(env.reset()).reshape(1, -1).to(dev)
+        ou_noise.reset()
         episode_reward = 0.0
         episode_actor_loss: list[float] = []
         episode_critic_loss: list[float] = []
@@ -378,7 +379,12 @@ def train_policy(
 if __name__ == "__main__":
     out_dir = "trained_models"
 
-    env = MobileRobotEnv()
+    # ── Seed every RNG so the saved checkpoint is reproducible ──
+    random.seed(0)
+    np.random.seed(0)
+    torch.manual_seed(0)
+
+    env = MobileRobotEnv(seed=0)
 
     policy, rewards = train_policy(
         env,

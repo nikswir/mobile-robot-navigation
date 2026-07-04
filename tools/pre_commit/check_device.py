@@ -20,11 +20,15 @@ from pathlib import Path
 #               Patterns               #
 ########################################
 
-# ── Each (pattern, message) is a hard-coded-device smell ──
+# ── Each (pattern, message) is a hard-coded-device smell. `cuda` may carry
+#    an index (`cuda:0`), so an optional `:N` is part of every quoted match. ──
 SMELLS = [
     (re.compile(r"\.cuda\("), "hard-coded .cuda() call"),
-    (re.compile(r"""\.to\(\s*["']cuda["']"""), 'hard-coded .to("cuda")'),
-    (re.compile(r"""device\s*=\s*["']cuda["']"""), 'hard-coded device="cuda"'),
+    (re.compile(r"""\.to\(\s*["']cuda(:\d+)?["']"""), 'hard-coded .to("cuda")'),
+    (
+        re.compile(r"""device\s*=\s*["']cuda(:\d+)?["']"""),
+        'hard-coded device="cuda"',
+    ),
 ]
 ALLOW = "# device-ok"
 

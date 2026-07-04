@@ -52,7 +52,7 @@ The reward is dense: forward speed plus a **potential-based progress term**
 $$
 r =
 \begin{cases}
-+101 & \text{goal reached } (\rho_g < 10),\\
++100 & \text{goal reached } (\rho_g < 10),\\
 -50  & \text{collision or out of bounds},\\
 a_0 - |a_1| + \kappa\,(\rho_g^{t-1}-\rho_g^{t}) - 1 & \text{otherwise,}
 \end{cases}

@@ -8,6 +8,10 @@ import flagged_mutants
 
 from pathlib import Path
 
+########################################
+#            Mutant report             #
+########################################
+
 
 def test_func_source_extracts_named_function() -> None:
     src = "def a():\n    return 1\n\n\ndef b():\n    return 2\n"

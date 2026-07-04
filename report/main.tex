@@ -47,9 +47,9 @@
 \newcommand{\EvalN}{300}
 \newcommand{\EvalArrived}{224}
 \newcommand{\EvalRate}{74.7\%}
-\newcommand{\LateWindowRate}{74.5\%}
-\newcommand{\EarlyReturn}{$-$26}
-\newcommand{\LateReturn}{$+$95}
+\newcommand{\LateWindowRate}{76.5\%}
+\newcommand{\EarlyReturn}{$-$39}
+\newcommand{\LateReturn}{$+$97}
 
 \title{\vspace{-1.2cm}\bfseries Learning to Navigate a Mobile Robot in
 Randomized Environments with Deep Deterministic Policy Gradients and a
@@ -195,7 +195,7 @@ bonuses/penalties:
 \begin{equation}
 r =
 \begin{cases}
-+101 & \text{goal reached } (\rho_g < 10),\\
++100 & \text{goal reached } (\rho_g < 10),\\
 -50  & \text{collision or out of bounds},\\
 a_0 - |a_1| + \kappa\,(\rho_g^{t-1} - \rho_g^{t}) - 1 & \text{otherwise,}
 \end{cases}
@@ -331,7 +331,7 @@ arrival, worth $\approx +94$ net, clears this threshold).
 \paragraph{Learning dynamics.}
 Figure~\ref{fig:lc} shows the training curves. Thanks to the dense progress
 term the agent reaches the goal already in the first hundred episodes
-($\sim$$20\%$ of them), and the arrival rate climbs steadily as the noise
+($\sim$$10\%$ of them), and the arrival rate climbs steadily as the noise
 anneals, reaching \LateWindowRate{} (true arrivals) over the final $200$
 episodes while the mean return rises from \EarlyReturn{} to \LateReturn.
 Ablations during development underline how much the task formulation matters

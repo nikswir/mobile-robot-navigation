@@ -17,8 +17,9 @@ construct does not fit, it explodes vertically rather than crowding the line.
 
 ## 1. Two tiers of structural comments
 
-*(Enforced by `check-banners`: banner width / centring / indent, plus the
-`# ──` intro spacing.)*
+*(Enforced by `check-banners`: banner width / centring / indent, the presence
+of at least one Tier-1 banner per structured module, plus the `# ──` intro
+spacing.)*
 
 There are exactly two kinds of structural comment. Use the right tier for the
 size of the thing it introduces.
@@ -46,6 +47,9 @@ Rules:
 - Indent the banner to match the code it heads (e.g. 4 spaces for a
   method-group banner inside a class). The width is the `#`-run length and does
   not count indentation.
+- **Every module that defines a function or class carries at least one Tier-1
+  banner.** Empty files and pure re-export modules (no `def`/`class`) are
+  exempt.
 
 Same width, different labels — note how they align:
 

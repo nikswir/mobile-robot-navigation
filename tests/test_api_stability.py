@@ -12,6 +12,10 @@ import dataclasses
 
 PKG = importlib.import_module("mobile_robot_navigation")
 
+########################################
+#              Public API              #
+########################################
+
 
 def test_exports() -> None:
     """`__all__` is exactly the supported public surface."""

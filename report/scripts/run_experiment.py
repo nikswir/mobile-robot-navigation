@@ -29,6 +29,10 @@ MAX_STEPS = 500
 ASSETS = Path(__file__).parents[1] / "assets"
 ASSETS.mkdir(parents=True, exist_ok=True)
 
+########################################
+#                Device                #
+########################################
+
 
 def select_device() -> torch.device:
     # MRN_DEVICE overrides autodetection (e.g. MRN_DEVICE=cpu to dodge the
@@ -41,6 +45,11 @@ def select_device() -> torch.device:
     if torch.backends.mps.is_available():
         return torch.device("mps")
     return torch.device("cpu")
+
+
+########################################
+#               Rollout                #
+########################################
 
 
 def greedy_trajectory(actor: Actor, device: torch.device) -> dict:
@@ -61,7 +70,12 @@ def greedy_trajectory(actor: Actor, device: torch.device) -> dict:
             outcome = "arrived"
             break
         if done:
-            outcome = "collision"
+            # Distinguish a real collision from leaving the field.
+            outcome = (
+                "out_of_bounds"
+                if env.out_of_boundary(env.robot)
+                else "collision"
+            )
             break
     obstacles = [
         {"x_max": o[0], "x_min": o[1], "y_max": o[2], "y_min": o[3]}
@@ -78,6 +92,11 @@ def greedy_trajectory(actor: Actor, device: torch.device) -> dict:
         "height": env.observation_shape[0],
         "target_threshold": env.target_threshold,
     }
+
+
+########################################
+#             Entry point              #
+########################################
 
 
 def main() -> None:

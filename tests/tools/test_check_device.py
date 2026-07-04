@@ -6,6 +6,10 @@ import check_device
 
 from pathlib import Path
 
+########################################
+#             Device check             #
+########################################
+
 
 def _write(tmp_path: Path, text: str) -> Path:
     path = tmp_path / "sample.py"

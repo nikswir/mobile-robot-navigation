@@ -10,13 +10,13 @@ graph TD
     CLI["python -m mobile_robot_navigation.run"] --> MAIN["run.py · @hydra.main"]
 
     subgraph Config["Configuration (Hydra)"]
-        GROUPS["configs/ groups<br/>env · agent"]
+        GROUPS["configs/ groups<br/>environment · agent · training · noise"]
         SCHEMA["config_schema.py<br/>typed Config (validated)"]
         GROUPS --> SCHEMA
     end
 
     MAIN --> SCHEMA
-    SCHEMA --> TRAIN["lib.py · train(cfg, out_dir)<br/>orchestrates the run"]
+    SCHEMA --> TRAIN["lib.py · train(cfg, *, device)<br/>orchestrates the run"]
 
     subgraph Env["environment.py"]
         ENV["MobileRobotEnv (gym.Env)"]
@@ -57,7 +57,8 @@ graph TD
   OU-noise `theta`/`sigma`, episode counts) so a bad run fails fast.
 - **`lib.py`** is the orchestration layer: it builds the `MobileRobotEnv`
   environment and the agent, then drives `agent.train_policy` over episodes and
-  writes results into the Hydra per-run output directory.
+  returns the trained actor and reward history. It is free of file I/O —
+  `run.py` is what writes the checkpoint into the Hydra per-run output directory.
 - **`environment.py`** holds the `MobileRobotEnv` `gym.Env`. Every `reset()`
   samples a fresh task: a random number of rectangular obstacles with random
   sizes and positions, plus a random start pose (position and heading). A
