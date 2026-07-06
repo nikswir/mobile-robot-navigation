@@ -34,7 +34,7 @@ jobs:
 
       # On PRs the artifact is the review copy — download it from the run page.
       - name: Upload the PDF as a build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: report
           path: report/main.pdf
